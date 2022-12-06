@@ -1,120 +1,6 @@
-# Pokemon-SV-Datasets
+# Make Pokemon SV Datasets
 
-<img src="docs/2022-11-21-18-43-07.png" >
-
-
-# Index
-
-- [1. Introduction](#1-introduction)
-- [2. Updates!!](#2-updates)
-- [3. Coming soon](#3-coming-soon)
-- [4. Quick Start](#4-quick-start)
-  - [4.1. docker-compose.yml](#41-docker-composeyml)
-  - [4.2. Dockerfile](#42-dockerfile)
-  - [4.3. 起動コマンド](#43-起動コマンド)
-- [5. Make Pokemon SV Datasets](#5-make-pokemon-sv-datasets)
-- [6. 必要なパッケージ](#6-必要なパッケージ)
-- [7. Setting param](#7-setting-param)
-- [8. パラメーター探索](#8-パラメーター探索)
-- [9. キャプチャー動画の分解](#9-キャプチャー動画の分解)
-  - [9.1. キャプチャー動画のリストを取得](#91-キャプチャー動画のリストを取得)
-  - [9.2. 動画の分解と保存](#92-動画の分解と保存)
-- [10. Make Labeling Interface](#10-make-labeling-interface)
-  - [10.1. ラベルの色を設定](#101-ラベルの色を設定)
-  - [10.2. XML の生成](#102-xml-の生成)
-- [11. 画像をアノテーション](#11-画像をアノテーション)
-- [12. アノテーションファイルの修正](#12-アノテーションファイルの修正)
-- [13. データセットの split](#13-データセットの-split)
-- [14. クラスラベルの出力](#14-クラスラベルの出力)
-
-
-## 1. Introduction
-
-ポケットモンスター SV のデータセットです．プレイ動画をキャプチャし，画像に分解してからアノテーションソフトでアノテーションを付けていきます．
-
-最終的には`COCO`フォーマットにて出力されます．
-
-![](https://hamaruki.com/wp-content/uploads/2022/11/0a8d7fce-000000040-1024x501.jpg)
-
-
-## 2. Updates!!
-* 【2022/11/19】動作確認用データセット
-* 【2022/11/21】ver1 データセットアップデート (train|269枚, val|119枚)
-* 【2022/12/03】
-  * ver2.2 データセットアップデート(train|838枚, val|287枚)
-  * パラメーター探索，Labeling Interfaceコード生成，クラスラベルの出力の追加
-  * 動画の分解アルゴリズム修正
-
-
-## 3. Coming soon
-- [ ] ver3 データセット
-
-
-## 4. Quick Start
-
-### 4.1. docker-compose.yml
-
-
-```docker
-version: '3'
-services:
-  jupyterlab:
-    build: .
-    image: jupyterlab-test-img
-    container_name: jupyterlab-test
-    working_dir: /home
-    volumes:
-      - .:/home/Pokemon-SV
-      - D:\PROJECT\201_HaMaruki\201_60_PokemonSV\Pokemon-SV-Datasets:/home/Pokemon-SV-Datasets
-    ports:
-      - "8888:8888"
-    command:
-      jupyter-lab --ip 0.0.0.0 --allow-root -b localhost
-```
-
-### 4.2. Dockerfile
-
-```docker
-FROM python:3
-
-RUN apt-get update
-RUN pip install --upgrade pip
-RUN python -m pip install jupyterlab
-
-RUN apt-get install -y ffmpeg
-
-# utils
-RUN pip install pillow \
-                matplotlib \
-                numpy \
-                loguru \
-                opencv-python \
-                tqdm
-
-# coco split
-RUN pip install sklearn \
-                funcy \
-                argparse \
-                scikit-multilearn \
-                scikit-learn
-```
-
-### 4.3. 起動コマンド
-
-```bash
-docker-compose up --build
-```
-
-
-## 5. Make Pokemon SV Datasets
-
-こちらの`NOTEBOOK`にてデータセットを作成します．
-
-[notebook/Make_Pokemon_SV.ipynb](notebook/Make_Pokemon_SV.ipynb)
-
-
-
-## 6. 必要なパッケージ
+## 必要なパッケージ
 
 ```python
 import json
@@ -143,7 +29,7 @@ from matplotlib.colors import rgb2hex
 from xml.etree.ElementTree import Element, SubElement, ElementTree
 ```
 
-## 7. Setting param
+## Setting param
 
 データセットのパスや動画のフォルダなどのパラメーターを設定します．
 
@@ -203,9 +89,11 @@ diff_list_total = []
 !ls
 ```
 
-## 8. パラメーター探索
+## パラメーター探索
 
 画像間の変化量のパラメータを検索します．ここで探索したパラメーターを元に閾値を設定します．
+
+
 
 ```python
 def param_analysis_video(video_path):
@@ -279,17 +167,15 @@ if(len(diff_list_total) > 0):
     plt.hist(diff_list_total, bins=30)
 ```
 
-## 9. キャプチャー動画の分解
+## キャプチャー動画の分解
 
 キャプチャーした動画を分解して画像に変換します．
 
 `save_freq`フレームごとに画像間の変化量を計算し，閾値以上であればその画像を保存します．
 
 
-![](https://i.imgur.com/3WP0Brb.png)
 
-
-### 9.1. キャプチャー動画のリストを取得
+### キャプチャー動画のリストを取得
 
 
 ```python
@@ -298,7 +184,7 @@ video_list = glob.glob(glob_path, recursive=True)
 pprint.pprint(video_list)
 ```
 
-### 9.2. 動画の分解と保存
+### 動画の分解と保存
 
 
 ```python
@@ -396,7 +282,7 @@ if(len(diff_list2) > 0):
     plt.hist(diff_list2, bins=30)
 ```
 
-## 10. Make Labeling Interface
+## Make Labeling Interface
 
 Label-Studioでラベルを追加する場合，下記のようなコードを記載する必要があります．
 
@@ -435,7 +321,7 @@ sv_id
 9            NaN
 ```
 
-### 10.1. ラベルの色を設定
+### ラベルの色を設定
 
 ラベルの色をカラーマップからRGBで抽出し，そこから16進数表記に変換します．
 
@@ -469,7 +355,7 @@ print(f"{k:02d}/{n_samples}\t{x:0.3f}\t{colorcode}")
 len(colorcode_list)
 ```
 
-### 10.2. XML の生成
+### XML の生成
 
 上記で生成した色とCSVから読み取ったポケモンの名前を使ってXMLを作成し`labeling_interface.xml`という名前で保存します．
 
@@ -591,12 +477,7 @@ with open(xml_file_path, "wb") as file:
 </View>
 ```
 
-これを適応するとこんな感じになります．
-
-![](https://i.imgur.com/OgCfSuE.jpg)
-
-
-## 11. 画像をアノテーション
+## 画像をアノテーション
 
 こちらのアノテーションソフトを使ってアノテーションしていきます．
 
@@ -608,7 +489,7 @@ https://github.com/makiMakiTi/label-studio-1.6.0
 docker-compose up --build
 ```
 
-## 12. アノテーションファイルの修正
+## アノテーションファイルの修正
 
 exportされたアノテーションファイル`datasets\v0\result.json`は画像のパスが`COCO`フォーマットになっていないので修正します．
 
@@ -644,7 +525,7 @@ with open(anotate_full_repath, 'wt', encoding='UTF-8') as coco:
 anotate_full_repath
 ```
 
-## 13. データセットの split
+## データセットの split
 
 データセットの分割します．
 
@@ -693,7 +574,7 @@ move_datasets_image_file(target_dir=datasets_path + "/" + image_train_dir, anno_
 move_datasets_image_file(target_dir=datasets_path + "/" + image_valid_dir, anno_path=anotate_valid_path)
 ```
 
-## 14. クラスラベルの出力
+## クラスラベルの出力
 
 モデルの`config`ファイルに記載するクラスラベルを出力します．これをコピペして貼り付けます．
 
